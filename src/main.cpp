@@ -34,6 +34,13 @@ void renderGame() {
     std::cout << "Rendering game..." << std::endl;
 }
 
+void licenseNotice() {
+    std::cout << "<program>  Copyright (C) <year>  <name of author>" << std::endl;
+    std::cout << "This program comes with ABSOLUTELY NO WARRANTY;" << std::endl;
+    std::cout << "This is free software, and you are welcome to redistribute it" << std::endl;
+    std::cout << "under certain conditions;" << std::endl;
+}
+
 int main() {
     while (isRunning) {
         auto frameStart = std::chrono::high_resolution_clock::now();
