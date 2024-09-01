@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import attrs
 import random
+from enum import Enum
 
 from typing import Final, Self, List
 
@@ -62,7 +63,7 @@ class Map:
             y_rand = random.randrange(y1 + h1, y2 + h2, 1)
 
             # Create line from rand wall a to x_rand
-            for x in range(y1 - y_rand):
+            for y in range(y1 - y_rand):
                 self.map_grid[y1 + y][x1] == 1
 
         """ elif ((x1 + w1 < x2 or x2 + w2 < x2) and (y1 + h1 < y2 or y2 + h2 < y1)): # Then random"""
@@ -105,6 +106,22 @@ class Room:
         self.rect_x_pos = rect_x_pos
         self.x_size = x_size
         self.y_size = y_size
+
+class RoomType(Enum):
+    """Enum containing different UID's for room types."""
+    BASIC = 1
+    CORRIDOR = 2
+    TREASURE = 3
+    TRAP = 4
+    PUZZLE = 5
+    LAIR = 6
+    SHOP = 7
+    SECRET = 8
+    ENV_HAZARD = 9
+    BOSS = 10
+    PORTAL = 11
+    ALTAR = 12
+    ARCHIVE = 13
 
 temp_map = Map(20, 20)
 temp_map._append_rooms(10)
