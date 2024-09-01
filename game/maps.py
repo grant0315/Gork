@@ -47,14 +47,27 @@ class Map:
         x1, y1, w1, h1 = a.rect_x_pos, a.rect_y_pos, a.x_size, a.y_size
         x2, y2, w2, h2 = b.rect_x_pos, b.rect_y_pos, b.x_size, b.y_size
 
-        if (x1 + w1 < x2 or x2 + w2 < x2): # Vertical transition
-            pass
-        elif (y1 + h1 < y2 or y2 + h2 < y1): # Hortizonal transition
-            pass
-        elif ((x1 + w1 < x2 or x2 + w2 < x2) and (y1 + h1 < y2 or y2 + h2 < y1)): # Then random
-            pass
-        else: # They overlap and doesn't need to be connected via cooridor
-            pass
+        if (x1 + w1 < x2 or x2 + w2 < x1): # Horizontal transition
+            a_rand_wall = random.randrange(0, x1 + w1, 1)
+            b_rand_wall = random.randrange(0, x2 + w2, 1)
+            x_rand = random.randrange(x1 + w1, x2 + w2, 1)
+
+            # Create line from rand wall a to x_rand
+            for x in range(x1 - x_rand):
+                self.map_grid[x1 + x][y1] == 1
+
+        elif (y1 + h1 < y2 or y2 + h2 < y1): # Vertical transition
+            a_rand_wall = random.randrange(0, y1 + h1, 1)
+            b_rand_wall = random.randrange(0, y2 + h2, 1)
+            y_rand = random.randrange(y1 + h1, y2 + h2, 1)
+
+            # Create line from rand wall a to x_rand
+            for x in range(y1 - y_rand):
+                self.map_grid[y1 + y][x1] == 1
+
+        """ elif ((x1 + w1 < x2 or x2 + w2 < x2) and (y1 + h1 < y2 or y2 + h2 < y1)): # Then random"""
+        """ else: # They overlap and doesn't need to be connected via cooridor
+            pass """
         
 
     def _is_room_available(self, room: Room) -> bool:
@@ -95,5 +108,6 @@ class Room:
 
 temp_map = Map(20, 20)
 temp_map._append_rooms(10)
+temp_map._create_cooridor()
 for x in range(len(temp_map.map_grid)):
     print(temp_map.map_grid[x])
