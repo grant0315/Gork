@@ -23,33 +23,55 @@ class Map:
                 temp: int = 0
                 self.map_grid[x].append(temp)
 
-    def append_rooms(self, room_count: int) -> None:
+    def _append_rooms(self, room_count: int) -> None:
         """Fit a list of room objects into map"""
         # Temp
+        time_out: int = 50 # used to determine stop inifite retrys for room placement
         room_x_size = 5
         room_y_size = 5
         
-        for x in range(room_count):            
+        for x in range(room_count):
+            time_out -= 1
             rand_x_pos: int = random.randrange(0, self.x_size, 1)
             rand_y_pos: int = random.randrange(0, self.y_size, 1)
             
             temp_room = Room(rand_x_pos, rand_y_pos, room_x_size, room_y_size)
 
             # Check if room will overlap with pre-existing walls
-            if (self._is_room_available(temp_room)):
+            if (self._is_room_available(temp_room) and time_out > 0):
                 for x in range(temp_room.x_size):
                     for y in range(temp_room.y_size):
                         self.map_grid[temp_room.rect_x_pos + x][temp_room.rect_y_pos + y] = 1
 
+    def _create_cooridor(self, a: Room, b: Room):
+        x1, y1, w1, h1 = a.rect_x_pos, a.rect_y_pos, a.x_size, a.y_size
+        x2, y2, w2, h2 = b.rect_x_pos, b.rect_y_pos, b.x_size, b.y_size
+
+        if (x1 + w1 < x2 or x2 + w2 < x2): # Vertical transition
+            pass
+        elif (y1 + h1 < y2 or y2 + h2 < y1): # Hortizonal transition
+            pass
+        elif ((x1 + w1 < x2 or x2 + w2 < x2) and (y1 + h1 < y2 or y2 + h2 < y1)): # Then random
+            pass
+        else: # They overlap and doesn't need to be connected via cooridor
+            pass
+        
+
     def _is_room_available(self, room: Room) -> bool:
         """Check if other room already exists in current room boundary."""
-        for x in range(room.x_size):
-            for y in range(room.y_size):
-                    print(f"Checking: {x}, {y}")
-                    if (self.map_grid[room.rect_x_pos + x][room.rect_y_pos + y] == 1):
+        print(f"Room X: {room.rect_x_pos} -> {room.rect_x_pos + room.x_size}, {room.rect_y_pos} -> {room.rect_y_pos + room.y_size}")
+        if (room.rect_x_pos + room.x_size < self.x_size and room.rect_y_pos + room.y_size < self.y_size): # Check if room size + position is within map
+            for x in range(room.x_size):
+                for y in range(room.y_size):
+                    print(f"Checking: {room.rect_x_pos + x}, {room.rect_y_pos + y}")
+                    if (self.map_grid[room.rect_x_pos + x][room.rect_y_pos + y] == 1): # Check if room already exists in map position
                         return False
                     else:
                         continue
+        else:
+            return False
+
+        return True
 
     def get_map_grid(self) -> List[int]:
         return self.map_grid
@@ -71,6 +93,7 @@ class Room:
         self.x_size = x_size
         self.y_size = y_size
 
-temp_map = Map(100, 100)
-temp_map.append_rooms(5)
-print(temp_map.map_grid)
+temp_map = Map(20, 20)
+temp_map._append_rooms(10)
+for x in range(len(temp_map.map_grid)):
+    print(temp_map.map_grid[x])
