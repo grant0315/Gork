@@ -30,6 +30,7 @@ class Map:
         time_out: int = 50 # used to determine stop inifite retrys for room placement
         room_x_size = 5
         room_y_size = 5
+        room_list: List[Room] = []
         
         for x in range(room_count):
             time_out -= 1
@@ -42,29 +43,56 @@ class Map:
             if (self._is_room_available(temp_room) and time_out > 0):
                 for x in range(temp_room.x_size):
                     for y in range(temp_room.y_size):
+                        room_list.append(temp_room)
                         self.map_grid[temp_room.rect_x_pos + x][temp_room.rect_y_pos + y] = 1
 
-    def _create_cooridor(self, a: Room, b: Room):
+        # Create corridors (sort list of rooms)
+        room_list.sort(key=lambda x: x.rect_x_pos, reverse=True)
+        for x in range(len(room_list) - 1):
+            self._create_corridor(room_list[x], room_list[x+1])
+
+    def _create_corridor(self, a: Room, b: Room):
         x1, y1, w1, h1 = a.rect_x_pos, a.rect_y_pos, a.x_size, a.y_size
         x2, y2, w2, h2 = b.rect_x_pos, b.rect_y_pos, b.x_size, b.y_size
 
         if (x1 + w1 < x2 or x2 + w2 < x1): # Horizontal transition
+            print(f"Writing horizontal transition: x1: {x1}, w1: {w1}, x2: {x2}, w2: {w2}")
             a_rand_wall = random.randrange(0, x1 + w1, 1)
             b_rand_wall = random.randrange(0, x2 + w2, 1)
-            x_rand = random.randrange(x1 + w1, x2 + w2, 1)
-
-            # Create line from rand wall a to x_rand
-            for x in range(x1 - x_rand):
-                self.map_grid[x1 + x][y1] == 1
+            x_rand: int
+            if (x1 + w1 < x2):
+                x_rand = random.randrange(x1 + w1, x2, 1)
+                print(f"x_rand: {x_rand}")
+            elif (x1 + w1 > x2):
+                x_rand = random.randrange(x2 + w2, x1, 1)
+                print(f"x_rand: {x_rand}")
+            for iter in range((x1 + w1), x_rand): # Create line from rand wall a to x_rand
+                print(f"Writing at {iter}, {a_rand_wall}, target: {x_rand}")
+                self.map_grid[iter][a_rand_wall] = 1
+            for iter in range(x_rand, x2): # Create line from rand wall b to x_rand
+                print(f"Writing at {iter}, {a_rand_wall}, target: {x_rand}")
+                self.map_grid[x_rand - iter][b_rand_wall] = 1
 
         elif (y1 + h1 < y2 or y2 + h2 < y1): # Vertical transition
+            print(f"Writing vertical transition: y1: {y1}, h1: {h1}, y2: {y2}, h2: {h2}")
             a_rand_wall = random.randrange(0, y1 + h1, 1)
             b_rand_wall = random.randrange(0, y2 + h2, 1)
-            y_rand = random.randrange(y1 + h1, y2 + h2, 1)
-
-            # Create line from rand wall a to x_rand
-            for y in range(y1 - y_rand):
-                self.map_grid[y1 + y][x1] == 1
+            y_rand: int
+            if (y1 + h1 < y2):
+                y_rand = random.randrange((y1 + h1), y2, 1)
+                print(f"y_rand: {y_rand}")
+            elif (y1 + h1 > y2):
+                y_rand = random.randrange((y2 + h2), y1, 1)
+                print(f"y_rand: {y_rand}")
+            else:
+                return None
+            for iter in range((y1 + h1), y_rand): # Create line from rand wall a to y_rand
+                print(f"Writing at {iter}, {a_rand_wall}, target: {y_rand}")
+                self.map_grid[a_rand_wall][(y1 + h1) + iter] = 1
+            for iter in range(y2, y_rand): # Create line from rand wall b to y_rand
+                print(f"Writing at {iter}, {a_rand_wall}, target: {y_rand}")
+                self.map_grid[b_rand_wall][y_rand + iter] = 1
+            
 
         """ elif ((x1 + w1 < x2 or x2 + w2 < x2) and (y1 + h1 < y2 or y2 + h2 < y1)): # Then random"""
         """ else: # They overlap and doesn't need to be connected via cooridor
@@ -123,8 +151,7 @@ class RoomType(Enum):
     ALTAR = 12
     ARCHIVE = 13
 
-temp_map = Map(20, 20)
+temp_map = Map(30, 30)
 temp_map._append_rooms(10)
-temp_map._create_cooridor()
 for x in range(len(temp_map.map_grid)):
     print(temp_map.map_grid[x])
