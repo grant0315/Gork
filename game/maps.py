@@ -48,7 +48,7 @@ class Map:
 
         # Create corridors (sort list of rooms)
         room_list.sort(key=lambda x: x.rect_x_pos, reverse=True)
-        for x in range(len(room_list) - 1):
+        for x in range(len(room_list)-1):
             self._create_corridor(room_list[x], room_list[x+1])
 
     def _create_corridor(self, a: Room, b: Room):
@@ -57,46 +57,56 @@ class Map:
 
         if (x1 + w1 < x2 or x2 + w2 < x1): # Horizontal transition
             print(f"Writing horizontal transition: x1: {x1}, w1: {w1}, x2: {x2}, w2: {w2}")
-            a_rand_wall = random.randrange(0, x1 + w1, 1)
-            b_rand_wall = random.randrange(0, x2 + w2, 1)
             x_rand: int
+            a_rand_wall: int 
+            b_rand_wall: int
+
             if (x1 + w1 < x2):
                 x_rand = random.randrange(x1 + w1, x2, 1)
-                print(f"x_rand: {x_rand}")
+                a_rand_wall = random.randrange(y1, y1 + h1, 1)
+                b_rand_wall = random.randrange(y2, y2 + h2, 1)
             elif (x1 + w1 > x2):
                 x_rand = random.randrange(x2 + w2, x1, 1)
-                print(f"x_rand: {x_rand}")
-            for iter in range((x1 + w1), x_rand): # Create line from rand wall a to x_rand
-                print(f"Writing at {iter}, {a_rand_wall}, target: {x_rand}")
+                a_rand_wall = random.randrange(y2, y2 + h2, 1)
+                b_rand_wall = random.randrange(y1, y1 + h1, 1)
+            else:
+                return None
+
+            for iter in range(x1+w1, x_rand):
                 self.map_grid[iter][a_rand_wall] = 1
-            for iter in range(x_rand, x2): # Create line from rand wall b to x_rand
-                print(f"Writing at {iter}, {a_rand_wall}, target: {x_rand}")
-                self.map_grid[x_rand - iter][b_rand_wall] = 1
+            for iter in range(x_rand, x2):
+                self.map_grid[iter][b_rand_wall] = 1
+            for iter in range(a_rand_wall, b_rand_wall+1):
+                print(f"Printing from a random wall -> b random wall")
+                self.map_grid[x_rand][iter] = 1
+
 
         elif (y1 + h1 < y2 or y2 + h2 < y1): # Vertical transition
             print(f"Writing vertical transition: y1: {y1}, h1: {h1}, y2: {y2}, h2: {h2}")
-            a_rand_wall = random.randrange(0, y1 + h1, 1)
-            b_rand_wall = random.randrange(0, y2 + h2, 1)
             y_rand: int
+            a_rand_wall: int
+            b_rand_wall: int
+
             if (y1 + h1 < y2):
-                y_rand = random.randrange((y1 + h1), y2, 1)
-                print(f"y_rand: {y_rand}")
+                y_rand = random.randrange(y1 + h1, y2, 1)
+                a_rand_wall = random.randrange(x1, x1 + w1, 1)
+                b_rand_wall = random.randrange(x2, x2 + w2, 1)
             elif (y1 + h1 > y2):
-                y_rand = random.randrange((y2 + h2), y1, 1)
-                print(f"y_rand: {y_rand}")
+                y_rand = random.randrange(y2 + h2, y1, 1)
+                a_rand_wall = random.randrange(x2, x2 + w2, 1)
+                b_rand_wall = random.randrange(x1, x1 + w1, 1)
             else:
                 return None
-            for iter in range((y1 + h1), y_rand): # Create line from rand wall a to y_rand
-                print(f"Writing at {iter}, {a_rand_wall}, target: {y_rand}")
-                self.map_grid[a_rand_wall][(y1 + h1) + iter] = 1
-            for iter in range(y2, y_rand): # Create line from rand wall b to y_rand
-                print(f"Writing at {iter}, {a_rand_wall}, target: {y_rand}")
-                self.map_grid[b_rand_wall][y_rand + iter] = 1
-            
 
-        """ elif ((x1 + w1 < x2 or x2 + w2 < x2) and (y1 + h1 < y2 or y2 + h2 < y1)): # Then random"""
-        """ else: # They overlap and doesn't need to be connected via cooridor
-            pass """
+            for iter in range(y1+h1, y_rand): # Do a rand wall to middle y position
+                print(f"top iter")
+                self.map_grid[a_rand_wall][iter] = 1
+            for iter in range(y_rand, y2): # Do b rand wall to middle y position
+                print(f"bottom iter")
+                self.map_grid[b_rand_wall][iter] = 1
+            for iter in range(b_rand_wall, a_rand_wall):
+                print(f"Printing from a random wall -> b random wall")
+                self.map_grid[iter][y_rand] = 1
         
 
     def _is_room_available(self, room: Room) -> bool:
