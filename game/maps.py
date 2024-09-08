@@ -8,9 +8,12 @@ from enum import Enum
 
 from typing import Final, Self, List
 
+import utilities as u
+
 class Map:
     """Generator for maps."""
     map_grid: List[int] = []
+    room_list: List[Room] = []
     x_size: int
     y_size: int
 
@@ -24,51 +27,45 @@ class Map:
                 temp: int = 0
                 self.map_grid[x].append(temp)
 
-    def _append_rooms(self, room_count: int) -> None:
+    def _append_rooms(self, room_count: int, room_x_size: int, room_y_size: int) -> None:
         """Fit a list of room objects into map"""
-        # Temp
-        time_out: int = 50 # used to determine stop inifite retrys for room placement
-        room_x_size = 5
-        room_y_size = 5
-        room_list: List[Room] = []
-        
-        for x in range(room_count):
-            time_out -= 1
+        while len(self.room_list) < room_count:
             rand_x_pos: int = random.randrange(0, self.x_size, 1)
             rand_y_pos: int = random.randrange(0, self.y_size, 1)
-            
             temp_room = Room(rand_x_pos, rand_y_pos, room_x_size, room_y_size)
-
-            # Check if room will overlap with pre-existing walls
-            if (self._is_room_available(temp_room) and time_out > 0):
+            
+            # Check if room will overlap with pre-existing walls or will be within 3 cells in x or y position
+            if (self._is_room_available(temp_room)):
                 for x in range(temp_room.x_size):
-                    for y in range(temp_room.y_size):
-                        room_list.append(temp_room)
-                        self.map_grid[temp_room.rect_x_pos + x][temp_room.rect_y_pos + y] = 1
+                    for y in range(temp_room.y_size):         
+                        self.map_grid[temp_room.rect_x_pos + x][temp_room.rect_y_pos + y] = 2
+                self.room_list.append(temp_room)
 
         # Create corridors (sort list of rooms)
-        room_list.sort(key=lambda x: x.rect_x_pos, reverse=True)
-        for x in range(len(room_list)-1):
-            self._create_corridor(room_list[x], room_list[x+1])
+        self.room_list.sort(key=lambda x: x.rect_x_pos, reverse=False)
+        for x in range(len(self.room_list)-1):
+            self._create_corridor(self.room_list[x], self.room_list[x+1])
 
     def _create_corridor(self, a: Room, b: Room):
         x1, y1, w1, h1 = a.rect_x_pos, a.rect_y_pos, a.x_size, a.y_size
         x2, y2, w2, h2 = b.rect_x_pos, b.rect_y_pos, b.x_size, b.y_size
 
-        if (x1 + w1 < x2 or x2 + w2 < x1): # Horizontal transition
-            print(f"Writing horizontal transition: x1: {x1}, w1: {w1}, x2: {x2}, w2: {w2}")
+        if (x1 + w1 < x2 or x2 + w2 < x1): # Vertical transition
+            print(f"Writing vertical transition: x1: {x1}, w1: {w1}, x2: {x2}, w2: {w2}")
             x_rand: int
             a_rand_wall: int 
             b_rand_wall: int
 
             if (x1 + w1 < x2):
-                x_rand = random.randrange(x1 + w1, x2, 1)
-                a_rand_wall = random.randrange(y1, y1 + h1, 1)
-                b_rand_wall = random.randrange(y2, y2 + h2, 1)
+                x_rand = random.randrange(x1 + w1 + 1, x2 - 1, 1)
+                a_rand_wall = random.randrange(y1 + 1, y1 + h1 - 1, 1)
+                b_rand_wall = random.randrange(y2 + 1, y2 + h2 - 1, 1)
+                print(f"A Random Wall: {x1}, {a_rand_wall}, B Random Wall: {x2}, {b_rand_wall}, Middle: {x_rand}")
             elif (x1 + w1 > x2):
-                x_rand = random.randrange(x2 + w2, x1, 1)
-                a_rand_wall = random.randrange(y2, y2 + h2, 1)
-                b_rand_wall = random.randrange(y1, y1 + h1, 1)
+                x_rand = random.randrange(x2 + w2 - 1, x1 + 1, 1)
+                a_rand_wall = random.randrange(y2 + 1, y2 + h2 - 1, 1)
+                b_rand_wall = random.randrange(y1 + 1, y1 + h1 - 1, 1)
+                print(f"A Random Wall: {x1}, {a_rand_wall}, B Random Wall: {x2}, {b_rand_wall}, Middle: {x_rand}")
             else:
                 return None
 
@@ -76,59 +73,83 @@ class Map:
                 self.map_grid[iter][a_rand_wall] = 1
             for iter in range(x_rand, x2):
                 self.map_grid[iter][b_rand_wall] = 1
-            for iter in range(a_rand_wall, b_rand_wall+1):
-                print(f"Printing from a random wall -> b random wall")
-                self.map_grid[x_rand][iter] = 1
+            if (a_rand_wall < b_rand_wall):
+                for iter in range(a_rand_wall, b_rand_wall+1):
+                    self.map_grid[x_rand][iter] = 1
+            else:
+                for iter in range(b_rand_wall, a_rand_wall+1):
+                    self.map_grid[x_rand][iter] = 1
 
-
-        elif (y1 + h1 < y2 or y2 + h2 < y1): # Vertical transition
-            print(f"Writing vertical transition: y1: {y1}, h1: {h1}, y2: {y2}, h2: {h2}")
+        elif (y1 + h1 < y2 or y2 + h2 < y1): # Horizontal transition
+            print(f"Writing horizontal transition: y1: {y1}, h1: {h1}, y2: {y2}, h2: {h2}")
             y_rand: int
             a_rand_wall: int
             b_rand_wall: int
 
             if (y1 + h1 < y2):
-                y_rand = random.randrange(y1 + h1, y2, 1)
-                a_rand_wall = random.randrange(x1, x1 + w1, 1)
-                b_rand_wall = random.randrange(x2, x2 + w2, 1)
+                y_rand = random.randrange(y1 + h1 + 1, y2 - 1, 1)
+                a_rand_wall = random.randrange(x1 + 1, x1 + w1 - 1, 1)
+                b_rand_wall = random.randrange(x2 + 1, x2 + w2 - 1, 1)
+                print(f"A Random Wall: {x1}, {a_rand_wall}, B Random Wall: {x2}, {b_rand_wall}, Middle: {y_rand}")
             elif (y1 + h1 > y2):
-                y_rand = random.randrange(y2 + h2, y1, 1)
-                a_rand_wall = random.randrange(x2, x2 + w2, 1)
-                b_rand_wall = random.randrange(x1, x1 + w1, 1)
+                y_rand = random.randrange(y2 + h2 - 1, y1 + 1, 1)
+                a_rand_wall = random.randrange(x2 + 1, x2 + w2 - 1, 1)
+                b_rand_wall = random.randrange(x1 + 1, x1 + w1 - 1, 1)
+                print(f"A Random Wall: {x1}, {a_rand_wall}, B Random Wall: {x2}, {b_rand_wall}, Middle: {y_rand}")
             else:
                 return None
 
-            for iter in range(y1+h1, y_rand): # Do a rand wall to middle y position
-                print(f"top iter")
-                self.map_grid[a_rand_wall][iter] = 1
-            for iter in range(y_rand, y2): # Do b rand wall to middle y position
-                print(f"bottom iter")
-                self.map_grid[b_rand_wall][iter] = 1
-            for iter in range(b_rand_wall, a_rand_wall):
-                print(f"Printing from a random wall -> b random wall")
-                self.map_grid[iter][y_rand] = 1
-        
+            if (y1+h1 > y2): # Determine whether room a is first or second from left
+                for iter in range(y_rand, y1): # Do a rand wall to middle y position
+                    self.map_grid[b_rand_wall][iter] = 1
+                for iter in range(y2+h2, y_rand): # Do b rand wall to middle y position
+                    self.map_grid[a_rand_wall][iter] = 1
+            else:
+                for iter in range(y1+h1, y_rand): # Do a rand wall to middle y position
+                    self.map_grid[a_rand_wall][iter] = 1
+                for iter in range(y_rand, y2): # Do b rand wall to middle y position
+                    self.map_grid[b_rand_wall][iter] = 1
+            if (a_rand_wall < b_rand_wall):
+                for iter in range(a_rand_wall, b_rand_wall+1):
+                    self.map_grid[iter][y_rand] = 1
+            else:
+                for iter in range(b_rand_wall, a_rand_wall+1):
+                    self.map_grid[iter][y_rand] = 1
 
     def _is_room_available(self, room: Room) -> bool:
         """Check if other room already exists in current room boundary."""
-        print(f"Room X: {room.rect_x_pos} -> {room.rect_x_pos + room.x_size}, {room.rect_y_pos} -> {room.rect_y_pos + room.y_size}")
-        if (room.rect_x_pos + room.x_size < self.x_size and room.rect_y_pos + room.y_size < self.y_size): # Check if room size + position is within map
-            for x in range(room.x_size):
-                for y in range(room.y_size):
-                    print(f"Checking: {room.rect_x_pos + x}, {room.rect_y_pos + y}")
-                    if (self.map_grid[room.rect_x_pos + x][room.rect_y_pos + y] == 1): # Check if room already exists in map position
-                        return False
-                    else:
-                        continue
+        if (room.rect_x_pos + room.x_size + 1 < self.x_size and room.rect_y_pos + room.y_size + 1 < self.y_size): # Check if room size + position is within map
+            if (room.rect_x_pos >= 0 and room.rect_y_pos >= 0): # Check if room is in negative bounds
+                for x in range(room.x_size):
+                    for y in range(room.y_size):
+                        if (self.map_grid[room.rect_x_pos + x][room.rect_y_pos + y] == 2): # Check if room already exists in map position
+                            if (self.map_grid[room.rect_x_pos + x - 3][room.rect_y_pos + y - 3] == 2 or self.map_grid[room.rect_x_pos + x + 3][room.rect_y_pos + y + 3] == 2): # Check if room exists -3 cells
+                                return False
+                            return False
+            else:
+                return False
         else:
             return False
 
         return True
 
+    def _check_if_rooms_touch(self, a: Room, b: Room) -> bool:
+        x1, y1, w1, h1 = a.rect_x_pos, a.rect_y_pos, a.x_size, a.y_size
+        x2, y2, w2, h2 = b.rect_x_pos, b.rect_y_pos, b.x_size, b.y_size
+
+        if (x1+w1 == x2 or x2+w2 == x1): # Touching x
+            return True
+        elif (y1+h1 == y2 or y2 + h2 == y1): # Touching y
+            return True
+        elif (x1+w1+3 >= x2 or x2+w2+3 >= x1): # 3 cell gap x
+            return True
+        elif (y1+h1+3 >= y2 or y2+h2+3 >= y1): # 3 cell gap y
+            return True
+        else:
+            return False
+
     def get_map_grid(self) -> List[int]:
         return self.map_grid
-    
-    def __str__(self):
         print(self.map_grid)
     
 class Room:
@@ -161,7 +182,6 @@ class RoomType(Enum):
     ALTAR = 12
     ARCHIVE = 13
 
-temp_map = Map(30, 30)
-temp_map._append_rooms(10)
-for x in range(len(temp_map.map_grid)):
-    print(temp_map.map_grid[x])
+temp_map = Map(500, 500)
+temp_map._append_rooms(10, 50, 50)
+u.create_image_from_map(temp_map.map_grid, "C:\\Users\\grant\\OneDrive\\Documents\\GitHub\\Gork\\data\\test.png")
